@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>Create Booking</h1>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+
+    <div class="mb-3">
+      {{ form.client.label_tag }}<br>
+      {{ form.client }}
+      {{ form.client.errors }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.event_name.label_tag }}<br>
+      {{ form.event_name }}
+      {{ form.event_name.errors }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.start_date.label_tag }}<br>
+      {{ form.start_date }}
+      {{ form.start_date.errors }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.end_date.label_tag }}<br>
+      {{ form.end_date }}
+      {{ form.end_date.errors }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.notes.label_tag }}<br>
+      {{ form.notes }}
+      {{ form.notes.errors }}
+    </div>
+
+    <div class="mb-3">
+      {{ form.items.label_tag }}<br>
+      {{ form.items }}
+      {{ form.items.errors }}
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create Booking</button>
+  </form>
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <!-- Select2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+  <!-- Select2 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+  <script>
+    function updateItemsField() {
+      var start = $('#id_start_date').val();
+      var end = $('#id_end_date').val();
+      if (start && end) {
+        $('#id_items').prop('disabled', true);
+        $.ajax({
+          url: "{% url 'bookings:available_items_api' %}",
+          data: {start_date: start, end_date: end},
+          success: function(data) {
+            var $items = $('#id_items');
+            $items.empty();
+            $.each(data.results, function(i, item) {
+              $items.append($('<option>', {
+                value: item.id,
+                text: item.text
+              }));
+            });
+            $items.trigger('change');
+            $items.prop('disabled', false);
+          }
+        });
+      }
+    }
+
+    $(document).ready(function() {
+      $('#id_items').select2({
+        placeholder: 'Select items',
+        allowClear: true,
+        width: '100%'
+      });
+
+      $('#id_start_date, #id_end_date').on('change', updateItemsField);
+
+      // Optionally, trigger on page load if dates are pre-filled
+      if ($('#id_start_date').val() && $('#id_end_date').val()) {
+        updateItemsField();
+      }
+    });
+  </script>
+{% endblock %}

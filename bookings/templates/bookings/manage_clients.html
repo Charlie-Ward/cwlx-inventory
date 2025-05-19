@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Manage Clients</h1>
+
+<ul class="list-group">
+  {% for client in clients %}
+    <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+            <strong>{{ client.name }}</strong> - {{ client.email }} <br>
+        </div>
+        <a href="{% url 'bookings:client_detail' client.id %}" class="btn btn-sm btn-outline-primary">Manage</a>
+        </li>
+    {% empty %}
+        <li class="list-group-item">No clients found.</li>
+    {% endfor %}
+</ul>
+{% endblock %}

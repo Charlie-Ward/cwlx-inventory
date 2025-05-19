@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Booking{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Manage Booking #{{ booking.id }}</h1>
+
+<div class="card mb-4">
+  <div class="card-body">
+    <h5 class="card-title">{{ booking.event_name }}</h5>
+    <p class="card-text">
+      <strong>Client:</strong> {{ booking.client }}<br>
+      <strong>Dates:</strong> {{ booking.start_date }} to {{ booking.end_date }}<br>
+      {% if booking.notes %}
+        <strong>Notes:</strong> {{ booking.notes }}<br>
+      {% endif %}
+    </p>
+    <form method="post" action="{% url 'bookings:delete_booking' booking.id %}" onsubmit="return confirm('Are you sure you want to delete this booking? This cannot be undone.');" class="mt-2">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-danger">Delete Booking</button>
+    </form>
+  </div>
+</div>
+
+<form method="POST" class="mb-4">
+  {% csrf_token %}
+  <div class="input-group mb-3">
+    <input type="text" name="barcode" class="form-control" placeholder="Scan or enter barcode..." autofocus>
+    <select name="action" class="form-select">
+      <option value="check_out">Check Out</option>
+      <option value="check_in">Check In</option>
+    </select>
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </div>
+</form>
+
+<h4>Assigned Items</h4>
+
+<h4 class="mt-5">Add Items</h4>
+<form method="POST" class="mb-4">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="add_items">
+  <div class="mb-3">
+    <label for="id_new_items">Select Items to Add</label>
+    <select name="new_items" id="id_new_items" class="form-select" multiple>
+      {% for item in available_items %}
+        <option value="{{ item.id }}">{{ item.name }} ({{ item.barcode }})</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button type="submit" class="btn btn-outline-secondary">Add Selected Items</button>
+</form>
+
+<form method="POST">
+  {% csrf_token %}
+  <table class="table table-bordered table-hover">
+    <thead class="table-dark">
+      <tr>
+        <th>Item Name</th>
+        <th>Barcode</th>
+        <th>Checked Out</th>
+        <th>Checked In</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for assigned in assigned_items %}
+      <tr class="{% if assigned.checked_in %}table-success{% elif assigned.checked_out %}table-warning{% else %}table-light{% endif %}">
+        <td>{{ assigned.item.name }}</td>
+        <td>{{ assigned.item.barcode }}</td>
+        <td>{{ assigned.checked_out|yesno:"✅,❌" }}</td>
+        <td>{{ assigned.checked_in|yesno:"✅,❌" }}</td>
+        <td>
+          {% if not assigned.checked_out %}
+          <button name="action" value="check_out" formaction="?item_id={{ assigned.item.id }}" class="btn btn-sm btn-outline-primary">Check Out</button>
+          {% endif %}
+          {% if assigned.checked_out and not assigned.checked_in %}
+          <button name="action" value="check_in" formaction="?item_id={{ assigned.item.id }}" class="btn btn-sm btn-outline-success">Check In</button>
+          {% endif %}
+          <button name="action" value="remove_item" formaction="?item_id={{ assigned.item.id }}" class="btn btn-sm btn-outline-danger">Remove</button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</form>
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+  $(document).ready(function() {
+    $('#id_new_items').select2({
+      placeholder: 'Search and select items',
+      allowClear: true,
+      width: '100%'
+    });
+  });
+</script>
+{% endblock %}

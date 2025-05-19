@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>All Bookings</h2>
+  <ul class="list-group">
+    {% for booking in bookings %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            <strong>{{ booking.event_name }}</strong> - {{ booking.start_date }} - {{ booking.end_date }}<br>
+            Client: {{ booking.client }}
+          </div>
+          <a href="{% url 'bookings:manage_booking' booking.id %}" class="btn btn-sm btn-outline-primary">Manage</a>
+        </li>
+    {% empty %}
+      <li class="list-group-item">No bookings found.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

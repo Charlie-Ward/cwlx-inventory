@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scan Item</title>
+</head>
+<body>
+    <h1>Scan an Item</h1>
+    <form method="POST">
+        {% csrf_token %}
+        <input type="text" name="barcode" autofocus placeholder="Scan barcode here..." />
+    </form>
+
+    {% if result %}
+        <h2>Item Found:</h2>
+        <p><strong>Name:</strong> {{ result.name }}</p>
+        <p><strong>Category:</strong> {{ result.category }}</p>
+        <p><strong>Unique ID:</strong> {{ result.unique_id }}</p>
+    {% endif %}
+</body>
+</html>

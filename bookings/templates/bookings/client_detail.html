@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Client: {{ client.name }}</h1>
+<p><strong>Email:</strong> {{ client.email }}</p>
+<p><strong>Phone:</strong> {{ client.phone }}</p>
+<p><strong>Notes:</strong> {{ client.notes }}</p>
+
+<div class="mb-3">
+  <a href="{% url 'bookings:edit_client' client.id %}" class="btn btn-warning">Edit Client</a>
+  <form action="{% url 'bookings:delete_client' client.id %}" method="post" style="display:inline;">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger" onclick="return confirm('Delete this client and all their bookings?');">Delete Client</button>
+  </form>
+</div>
+
+<h2>Bookings</h2>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Event Name</th>
+      <th>Dates</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for booking in bookings %}
+    <tr>
+      <td>{{ booking.event_name }}</td>
+      <td>{{ booking.start_date }} to {{ booking.end_date }}</td>
+      <td>
+        <a href="{% url 'bookings:manage_booking' booking.id %}" class="btn btn-sm btn-primary">Manage Booking</a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr><td colspan="3">No bookings for this client.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
