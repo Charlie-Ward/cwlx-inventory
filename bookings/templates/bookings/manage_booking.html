@@ -44,7 +44,7 @@
     <label for="id_new_items">Select Items to Add</label>
     <select name="new_items" id="id_new_items" class="form-select" multiple>
       {% for item in available_items %}
-        <option value="{{ item.id }}">{{ item.name }} ({{ item.barcode }})</option>
+        <option value="{{ item.id }}">{{ item.product.name }} ({{ item.barcode }})</option>
       {% endfor %}
     </select>
   </div>
@@ -66,18 +66,33 @@
     <tbody>
       {% for assigned in assigned_items %}
       <tr class="{% if assigned.checked_in %}table-success{% elif assigned.checked_out %}table-warning{% else %}table-light{% endif %}">
-        <td>{{ assigned.item.name }}</td>
-        <td>{{ assigned.item.barcode }}</td>
+        <td>{{ assigned.inventory_item.product.name }}</td>
+        <td>{{ assigned.inventory_item.barcode }}</td>
         <td>{{ assigned.checked_out|yesno:"✅,❌" }}</td>
         <td>{{ assigned.checked_in|yesno:"✅,❌" }}</td>
         <td>
           {% if not assigned.checked_out %}
-          <button name="action" value="check_out" formaction="?item_id={{ assigned.item.id }}" class="btn btn-sm btn-outline-primary">Check Out</button>
+          <form method="post" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="check_out">
+            <input type="hidden" name="item_id" value="{{ assigned.inventory_item.id }}">
+            <button type="submit" class="btn btn-sm btn-outline-primary">Check Out</button>
+          </form>
           {% endif %}
           {% if assigned.checked_out and not assigned.checked_in %}
-          <button name="action" value="check_in" formaction="?item_id={{ assigned.item.id }}" class="btn btn-sm btn-outline-success">Check In</button>
+          <form method="post" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="check_in">
+            <input type="hidden" name="item_id" value="{{ assigned.inventory_item.id }}">
+            <button type="submit" class="btn btn-sm btn-outline-success">Check In</button>
+          </form>
           {% endif %}
-          <button name="action" value="remove_item" formaction="?item_id={{ assigned.item.id }}" class="btn btn-sm btn-outline-danger">Remove</button>
+          <form method="post" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="remove_item">
+            <input type="hidden" name="item_id" value="{{ assigned.inventory_item.id }}">
+            <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+          </form>
         </td>
       </tr>
       {% endfor %}

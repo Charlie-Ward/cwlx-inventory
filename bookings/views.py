@@ -45,32 +45,26 @@ def create_booking(request):
     if request.method == "POST":
         form = BookingForm(request.POST)
         if form.is_valid():
-            booking = form.save(commit=False)
-            booking.save()
-            selected_items = form.cleaned_data['items']  # Should be InventoryItems
-            for item in selected_items:
-                AssignedItem.objects.create(booking=booking, inventory_item=item)
+            booking = form.save()
             return redirect('bookings:manage_booking', booking_id=booking.pk)
     else:
         form = BookingForm()
 
-    # Filter available inventory items based on selected dates
-    start_date = request.POST.get('start_date') or None
-    end_date = request.POST.get('end_date') or None
+    # # Dynamically filter available items for the form
+    # start_date = request.POST.get('start_date') or None
+    # end_date = request.POST.get('end_date') or None
 
-    available_items = InventoryItem.objects.filter(is_available=True)
-    if start_date and end_date:
-        overlapping_bookings = Booking.objects.filter(
-            Q(start_date__lte=end_date) & Q(end_date__gte=start_date)
-        )
-        booked_item_ids = AssignedItem.objects.filter(
-            booking__in=overlapping_bookings
-        ).values_list('inventory_item_id', flat=True)
-        available_items = available_items.exclude(id__in=booked_item_ids)
+    # available_items = InventoryItem.objects.filter(is_available=True)
+    # if start_date and end_date:
+    #     overlapping_bookings = Booking.objects.filter(
+    #         Q(start_date__lte=end_date) & Q(end_date__gte=start_date)
+    #     )
+    #     booked_item_ids = AssignedItem.objects.filter(
+    #         booking__in=overlapping_bookings
+    #     ).values_list('inventory_item_id', flat=True)
+    #     available_items = available_items.exclude(id__in=booked_item_ids)
 
-    from django.forms.models import ModelChoiceField, ModelMultipleChoiceField
-    if 'items' in form.fields and isinstance(form.fields['items'], (ModelChoiceField, ModelMultipleChoiceField)):
-        form.fields['items'].queryset = available_items
+    # form.fields['items'].queryset = available_items
 
     return render(request, 'bookings/create_booking.html', {'form': form})
 
@@ -85,40 +79,41 @@ def manage_booking(request, booking_id):
             item_ids = request.POST.getlist("new_items")
             for item_id in item_ids:
                 item = InventoryItem.objects.filter(id=item_id).first()
-                overlapping_bookings = Booking.objects.filter(
-                    Q(start_date__lte=booking.end_date) & Q(end_date__gte=booking.start_date)
-                ).exclude(pk=booking.pk)
-                booked_item_ids = AssignedItem.objects.filter(
-                    booking__in=overlapping_bookings
-                ).values_list('inventory_item_id', flat=True)
-                if item and item.pk not in booked_item_ids and not AssignedItem.objects.filter(booking=booking, inventory_item=item).exists():
+                # Only assign if not already assigned to this booking
+                if item and not AssignedItem.objects.filter(booking=booking, inventory_item=item).exists():
                     AssignedItem.objects.create(booking=booking, inventory_item=item)
-        else:
-            item_id = request.GET.get("item_id") or request.POST.get("new_item")
-            if action == "check_out":
-                assigned = AssignedItem.objects.filter(booking=booking, inventory_item_id=item_id).first()
-                if assigned and not assigned.checked_out:
-                    assigned.checked_out = True
-                    assigned.save()
-            elif action == "check_in":
-                assigned = AssignedItem.objects.filter(booking=booking, inventory_item_id=item_id).first()
-                if assigned and assigned.checked_out and not assigned.checked_in:
-                    assigned.checked_in = True
-                    assigned.save()
-            elif action == "remove_item":
-                AssignedItem.objects.filter(booking=booking, inventory_item_id=item_id).delete()
-
+        elif action == "remove_item":
+            item_id = request.POST.get("item_id")
+            assigned_item = AssignedItem.objects.filter(booking=booking, inventory_item_id=item_id).first()
+            if assigned_item:
+                assigned_item.delete()
+        elif action == "check_out":
+            item_id = request.POST.get("item_id")
+            assigned = AssignedItem.objects.filter(booking=booking, inventory_item_id=item_id).first()
+            if assigned and not assigned.checked_out:
+                assigned.checked_out = True
+                assigned.save()
+        elif action == "check_in":
+            item_id = request.POST.get("item_id")
+            assigned = AssignedItem.objects.filter(booking=booking, inventory_item_id=item_id).first()
+            if assigned and assigned.checked_out and not assigned.checked_in:
+                assigned.checked_in = True
+                assigned.save()
         return redirect('bookings:manage_booking', booking_id=booking.pk)
 
-    # Block items already booked for overlapping dates
+    # Only exclude items assigned to bookings that overlap in dates
     overlapping_bookings = Booking.objects.filter(
         Q(start_date__lte=booking.end_date) & Q(end_date__gte=booking.start_date)
     ).exclude(pk=booking.pk)
     booked_item_ids = AssignedItem.objects.filter(
         booking__in=overlapping_bookings
     ).values_list('inventory_item_id', flat=True)
-    assigned_ids = assigned_items.values_list('item_id', flat=True)
-    available_items = InventoryItem.objects.exclude(id__in=booked_item_ids).exclude(id__in=assigned_ids)
+    already_assigned_ids = assigned_items.values_list('inventory_item_id', flat=True)
+    available_items = InventoryItem.objects.filter(is_available=True).exclude(
+        id__in=booked_item_ids
+    ).exclude(
+        id__in=already_assigned_ids
+    )
 
     return render(request, 'bookings/manage_booking.html', {
         'booking': booking,
@@ -151,7 +146,7 @@ def available_items_api(request):
         )
         booked_item_ids = AssignedItem.objects.filter(
             booking__in=overlapping_bookings
-        ).values_list('item_id', flat=True)
+        ).values_list('inventory_item_id', flat=True)
         available_items = InventoryItem.objects.exclude(id__in=booked_item_ids)
     else:
         available_items = InventoryItem.objects.all()
@@ -181,10 +176,6 @@ def client_detail(request, client_id):
         'client': client,
         'bookings': bookings
     })
-
-from django.shortcuts import render, get_object_or_404, redirect
-from .models import Client
-from .forms import ClientForm  # Make sure you have a ModelForm for Client
 
 def edit_client(request, client_id):
     client = get_object_or_404(Client, id=client_id)

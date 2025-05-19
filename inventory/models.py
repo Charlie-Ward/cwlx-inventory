@@ -1,13 +1,14 @@
 from django.db import models
 
-class Category(models.TextChoices):
-    CABLES = "Cables", "Cables"
-    LIGHTS = "Lights", "Lights"
-    CONTROL = "Control", "Control"
+class Category(models.Model):
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
 
 class Product(models.Model):
     name = models.CharField(max_length=100)
-    category = models.CharField(max_length=20, choices=Category.choices)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
     description = models.TextField(blank=True)
 
     def __str__(self):

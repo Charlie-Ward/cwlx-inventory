@@ -1,16 +1,11 @@
 from django import forms
-from .models import Booking, Item, Client
+from .models import Booking, Client
+from inventory.models import InventoryItem
 
 class BookingForm(forms.ModelForm):
-    items = forms.ModelMultipleChoiceField(
-        queryset=Item.objects.all(),
-        required=False,
-        widget=forms.SelectMultiple(attrs={'class': 'form-select', 'id': 'id_items'})
-    )
-
     class Meta:
         model = Booking
-        fields = ['client', 'event_name', 'start_date', 'end_date', 'notes', 'items']
+        fields = ['event_name', 'start_date', 'end_date', 'client', 'notes']
         widgets = {
             'client': forms.Select(attrs={'class': 'form-select'}),
             'event_name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -21,7 +16,7 @@ class BookingForm(forms.ModelForm):
 
 class AddItemsForm(forms.Form):
     new_items = forms.ModelMultipleChoiceField(
-        queryset=Item.objects.all(),
+        queryset=InventoryItem.objects.filter(is_available=True),
         required=False,
         widget=forms.SelectMultiple(attrs={
             'class': 'form-select',
