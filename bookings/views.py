@@ -80,7 +80,6 @@ def manage_booking(request, booking_id):
             item_ids = request.POST.getlist("new_items")
             for item_id in item_ids:
                 item = InventoryItem.objects.filter(id=item_id).first()
-                # Only assign if not already assigned to this booking
                 if item and not AssignedItem.objects.filter(booking=booking, inventory_item=item).exists():
                     AssignedItem.objects.create(booking=booking, inventory_item=item)
         elif action == "remove_item":
@@ -90,10 +89,23 @@ def manage_booking(request, booking_id):
                 assigned_item.delete()
         elif action == "check_out":
             item_id = request.POST.get("item_id")
-            assigned = AssignedItem.objects.filter(booking=booking, inventory_item_id=item_id).first()
-            if assigned and not assigned.checked_out:
-                assigned.checked_out = True
-                assigned.save()
+            # If coming from the barcode form, item_id may be None, so check barcode
+            barcode = request.POST.get("barcode")
+            if not item_id and barcode:
+                item = InventoryItem.objects.filter(barcode=barcode).first()
+                if item:
+                    assigned = AssignedItem.objects.filter(booking=booking, inventory_item=item).first()
+                    if not assigned:
+                        assigned = AssignedItem.objects.create(booking=booking, inventory_item=item, checked_out=True)
+                    else:
+                        if not assigned.checked_out:
+                            assigned.checked_out = True
+                            assigned.save()
+            else:
+                assigned = AssignedItem.objects.filter(booking=booking, inventory_item_id=item_id).first()
+                if assigned and not assigned.checked_out:
+                    assigned.checked_out = True
+                    assigned.save()
         elif action == "check_in":
             item_id = request.POST.get("item_id")
             assigned = AssignedItem.objects.filter(booking=booking, inventory_item_id=item_id).first()
