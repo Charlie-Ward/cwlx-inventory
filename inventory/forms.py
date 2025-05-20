@@ -9,7 +9,12 @@ class ProductForm(forms.ModelForm):
 class InventoryItemForm(forms.ModelForm):
     class Meta:
         model = InventoryItem
-        fields = ['product', 'barcode', 'serial_number', 'is_available']
+        exclude = ['product']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'barcode' in self.fields:
+            self.fields['barcode'].widget.attrs.update({'id': 'barcode-field'})
 
 class CategoryForm(forms.ModelForm):
     class Meta:

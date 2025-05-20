@@ -2,6 +2,7 @@
 """Django's command-line utility for administrative tasks."""
 import os
 import sys
+from django.contrib.auth import get_user_model
 
 
 def main():
@@ -19,4 +20,12 @@ def main():
 
 
 if __name__ == '__main__':
+    admin_password = os.environ.get('DJANGO_ADMIN_PASSWORD')
+    if admin_password:
+        User = get_user_model()
+        user, created = User.objects.get_or_create(username='admin')
+        user.set_password(admin_password)
+        user.is_superuser = True
+        user.is_staff = True
+        user.save()
     main()

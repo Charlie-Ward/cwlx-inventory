@@ -1,4 +1,5 @@
 {% load static %}
+{% load tz %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -31,9 +32,17 @@
   <nav class="navbar navbar-expand-lg navbar-light bg-white mb-4 shadow-sm">
     <div class="container">
       {% load static %}
-      <a href="{% url 'home' %}">
+      <a class="navbar-brand" href="{% url 'home' %}">
         <img src="{% static 'images/logo.png' %}" alt="Logo" height="50">
       </a>
+      <div class="d-flex ms-auto">
+        {% if user.is_authenticated %}
+          <form method="post" action="{% url 'logout' %}" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-danger ms-2">Logout</button>
+          </form>
+        {% endif %}
+      </div>
     </div>
   </nav>
 
@@ -61,5 +70,9 @@
     </div>
   {% endif %}
 
+  <footer class="text-center text-muted py-3 mt-5 border-top">
+    &copy; {{ now|date:"Y" }} Lighting Inventory &mdash;
+    <a href="https://github.com/charlie-ward/cwlx-inventory" target="_blank" rel="noopener">GitHub Repo</a>
+  </footer>
 </body>
 </html>

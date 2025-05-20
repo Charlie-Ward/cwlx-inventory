@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.http import JsonResponse
 from django.db.models import Q
 from django.utils.timezone import now
+from django.contrib.auth.decorators import login_required
 
 from inventory.models import Product, InventoryItem
 from .models import AssignedItem, Booking, Client
@@ -131,8 +132,13 @@ def home(request):
 
 # --- BOOKING LIST ---
 def booking_list(request):
-    bookings = Booking.objects.all().order_by('start_date')
-    return render(request, 'bookings/booking_list.html', {'bookings': bookings})
+    today = now().date()
+    upcoming_bookings = Booking.objects.filter(end_date__gte=today).order_by('start_date')
+    past_bookings = Booking.objects.filter(end_date__lt=today).order_by('-end_date')
+    return render(request, 'bookings/booking_list.html', {
+        'upcoming_bookings': upcoming_bookings,
+        'past_bookings': past_bookings,
+    })
 
 # --- AVAILABLE ITEMS API ---
 def available_items_api(request):

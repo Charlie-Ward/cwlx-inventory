@@ -1,0 +1,1 @@
+web: gunicorn lighting_inventory_manager.wsgi

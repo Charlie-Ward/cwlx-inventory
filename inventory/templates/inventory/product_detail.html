@@ -3,7 +3,18 @@
 <h1>{{ product.name }} <small class="text-muted">({{ product.category }})</small></h1>
 <p>{{ product.description }}</p>
 
+<a href="{% url 'inventory:add_inventory_item' product.pk %}" class="btn btn-success mb-3">New Inventory Item</a>
+<a href="{% url 'inventory:edit_product' product.pk %}" class="btn btn-warning mb-3">Edit Product</a>
+
 <h3>Inventory Items</h3>
+
+<form method="get" class="mb-3">
+  <div class="input-group">
+    <input type="text" name="barcode" value="{{ search_query }}" class="form-control" placeholder="Search by barcode...">
+    <button type="submit" class="btn btn-outline-secondary">Search</button>
+  </div>
+</form>
+
 <table class="table">
   <thead>
     <tr>
@@ -28,11 +39,15 @@
         </form>
       </td>
       <td>
+        <a href="{% url 'inventory:edit_inventory_item' item.pk %}" class="btn btn-sm btn-info">Edit</a>
         <form method="post" style="display:inline;">
           {% csrf_token %}
           <input type="hidden" name="item_id" value="{{ item.id }}">
           <button type="submit" name="delete_item" class="btn btn-sm btn-danger" onclick="return confirm('Delete this item?');">Delete</button>
         </form>
+        <a href="{% url 'inventory:download_barcode' item.id %}" class="btn btn-sm btn-outline-dark" title="Download Barcode">
+          Download Barcode
+        </a>
       </td>
     </tr>
     {% empty %}

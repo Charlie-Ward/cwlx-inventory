@@ -4,18 +4,33 @@
     <a href="{% url 'bookings:create_booking' %}" class="btn btn-success me-2">Create New Booking</a>
   </div>
 
-  <h2>All Bookings</h2>
-  <ul class="list-group">
-    {% for booking in bookings %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-          <div>
-            <strong>{{ booking.event_name }}</strong> - {{ booking.start_date }} - {{ booking.end_date }}<br>
-            Client: {{ booking.client }}
-          </div>
-          <a href="{% url 'bookings:manage_booking' booking.id %}" class="btn btn-sm btn-outline-primary">Manage</a>
-        </li>
+  <h2>Upcoming Bookings</h2>
+  <ul class="list-group mb-4">
+    {% for booking in upcoming_bookings %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <strong>{{ booking.event_name }}</strong> - {{ booking.start_date }} - {{ booking.end_date }}<br>
+          Client: {{ booking.client }}
+        </div>
+        <a href="{% url 'bookings:manage_booking' booking.id %}" class="btn btn-sm btn-outline-primary">Manage</a>
+      </li>
     {% empty %}
-      <li class="list-group-item">No bookings found.</li>
+      <li class="list-group-item">No upcoming bookings found.</li>
+    {% endfor %}
+  </ul>
+
+  <h2>Past Bookings</h2>
+  <ul class="list-group">
+    {% for booking in past_bookings %}
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <strong>{{ booking.event_name }}</strong> - {{ booking.start_date }} - {{ booking.end_date }}<br>
+          Client: {{ booking.client }}
+        </div>
+        <a href="{% url 'bookings:manage_booking' booking.id %}" class="btn btn-sm btn-outline-primary">Manage</a>
+      </li>
+    {% empty %}
+      <li class="list-group-item">No past bookings found.</li>
     {% endfor %}
   </ul>
 {% endblock %}

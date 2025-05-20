@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Add Inventory Item for {{ product.name }}</h1>
+<form method="post">
+  {% csrf_token %}
+  {{ form.non_field_errors }}
+  {% for field in form %}
+    {% if field.name != "product" %}
+      <div class="mb-2">
+        {{ field.label_tag }}
+        {% if field.name == "barcode" %}
+          {{ field }}
+          <button type="button" class="btn btn-outline-secondary btn-sm" onclick="generateBarcode()">Auto-generate</button>
+        {% else %}
+          {{ field }}
+        {% endif %}
+        {{ field.errors }}
+      </div>
+    {% endif %}
+  {% endfor %}
+  <button type="submit" class="btn btn-success">Add Inventory Item</button>
+</form>
+<a href="{% url 'inventory:product_detail' product.pk %}" class="btn btn-secondary mt-3">Back to Product</a>
+
+<script>
+function generateBarcode() {
+  // Example: generate a random 12-digit number
+  const barcode = Math.floor(100000000000 + Math.random() * 900000000000);
+  document.getElementById('barcode-field').value = barcode;
+}
+</script>
+
+{% endblock %}
