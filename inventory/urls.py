@@ -13,4 +13,6 @@ urlpatterns = [
     path('product/<int:pk>/edit/', views.edit_product, name='edit_product'),
     path('item/<int:pk>/edit/', views.edit_inventory_item, name='edit_inventory_item'),
     path('item/<int:item_id>/barcode/', views.download_barcode, name='download_barcode'),
+    path('scan-barcode/', views.scan_barcode, name='scan_barcode'),
+    path('next-barcode/', views.next_barcode, name='next_barcode'),
 ]

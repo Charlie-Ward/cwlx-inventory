@@ -121,6 +121,12 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]  # For development, if you have a /static folder in your project
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')    # For collectstatic (production)
 
+# Media files (User-uploaded content)
+# https://docs.djangoproject.com/en/5.2/topics/files/
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 

@@ -104,7 +104,7 @@ def manage_booking(request, booking_id):
 
     # Only exclude items assigned to bookings that overlap in dates
     overlapping_bookings = Booking.objects.filter(
-        Q(start_date__lte=booking.end_date) & Q(end_date__gte=booking.start_date)
+        Q(start_date__lt=booking.end_date) & Q(end_date__gt=booking.start_date)
     ).exclude(pk=booking.pk)
     booked_item_ids = AssignedItem.objects.filter(
         booking__in=overlapping_bookings
@@ -124,7 +124,7 @@ def manage_booking(request, booking_id):
 
 # --- HOME ---
 def home(request):
-    upcoming_bookings = Booking.objects.filter(start_date__gte=now().date()).order_by('start_date')[:5]
+    upcoming_bookings = Booking.objects.filter(end_date__gte=now().date()).order_by('start_date')[:5]
     context = {
         'upcoming_bookings': upcoming_bookings
     }
@@ -210,3 +210,15 @@ def add_client(request):
     else:
         form = ClientForm()
     return render(request, 'bookings/add_client.html', {'form': form})
+
+# --- EDIT BOOKING ---
+def edit_booking(request, booking_id):
+    booking = get_object_or_404(Booking, pk=booking_id)
+    if request.method == "POST":
+        form = BookingForm(request.POST, instance=booking)
+        if form.is_valid():
+            form.save()
+            return redirect('bookings:manage_booking', booking_id=booking.pk)
+    else:
+        form = BookingForm(instance=booking)
+    return render(request, 'bookings/edit_booking.html', {'form': form, 'booking': booking})

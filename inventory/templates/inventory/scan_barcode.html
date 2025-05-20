@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Scan or Enter Barcode</h1>
+<form method="post" class="mb-3">
+  {% csrf_token %}
+  <div class="input-group">
+    <input type="text" name="barcode" class="form-control" placeholder="Scan or enter barcode..." autofocus>
+    <button type="submit" class="btn btn-primary">Find Item</button>
+  </div>
+  {% if error %}
+    <div class="alert alert-danger mt-3">{{ error }}</div>
+  {% endif %}
+</form>
+{% endblock %}

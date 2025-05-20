@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Edit Inventory Item: {{ item.barcode }}</h1>
+<p>
+  <strong>Product:</strong> {{ item.product.name }}<br>
+  <strong>Category:</strong> {{ item.product.category }}
+</p>
 <form method="post">
   {% csrf_token %}
   {{ form.as_p }}

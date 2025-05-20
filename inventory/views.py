@@ -3,7 +3,7 @@ from django.db.models import Q
 from .models import Product, InventoryItem, Category
 from .forms import ProductForm, InventoryItemForm, CategoryForm
 import io
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 import barcode
 from barcode.writer import ImageWriter
 
@@ -152,3 +152,23 @@ def download_barcode(request, item_id):
     response = HttpResponse(buffer, content_type='image/png')
     response['Content-Disposition'] = f'attachment; filename=barcode_{barcode_value}.png'
     return response
+
+def scan_barcode(request):
+    error = None
+    if request.method == "POST":
+        barcode = request.POST.get("barcode")
+        try:
+            item = InventoryItem.objects.get(barcode=barcode)
+            return redirect('inventory:edit_inventory_item', pk=item.pk)
+        except InventoryItem.DoesNotExist:
+            error = "No item found with that barcode."
+    return render(request, "inventory/scan_barcode.html", {"error": error})
+
+def next_barcode(request):
+    last_item = InventoryItem.objects.order_by('-barcode').first()
+    if last_item and last_item.barcode.isdigit():
+        next_number = int(last_item.barcode) + 1
+    else:
+        next_number = 1
+    next_barcode = str(next_number).zfill(12)
+    return JsonResponse({'barcode': next_barcode})
