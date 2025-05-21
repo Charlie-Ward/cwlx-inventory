@@ -6,6 +6,8 @@ import io
 from django.http import HttpResponse, JsonResponse
 import barcode
 from barcode.writer import ImageWriter
+from bookings.models import AssignedItem
+from django.utils import timezone
 
 def item_list(request):
     category_id = request.GET.get('category')
@@ -58,37 +60,18 @@ def product_list(request):
 
 def product_detail(request, pk):
     product = get_object_or_404(Product, pk=pk)
-    search_query = request.GET.get('barcode', '')
-    items = InventoryItem.objects.filter(product=product)
-    if search_query:
-        items = items.filter(barcode__icontains=search_query)
-    form = InventoryItemForm(initial={'product': product})
-
-    if request.method == "POST":
-        if "add_item" in request.POST:
-            form = InventoryItemForm(request.POST)
-            if form.is_valid():
-                new_item = form.save(commit=False)
-                new_item.product = product  # Force the product
-                new_item.save()
-                return redirect('inventory:product_detail', pk=product.pk)
-            # If not valid, fall through and render with bound form (shows errors)
-        elif "toggle_available" in request.POST:
-            item_id = request.POST.get("item_id")
-            item = get_object_or_404(InventoryItem, pk=item_id, product=product)
-            item.is_available = not item.is_available
-            item.save()
-            return redirect('inventory:product_detail', pk=product.pk)
-        elif "delete_item" in request.POST:
-            item_id = request.POST.get("item_id")
-            item = get_object_or_404(InventoryItem, pk=item_id, product=product)
-            item.delete()
-            return redirect('inventory:product_detail', pk=product.pk)
-    # If GET or invalid POST, form will be either unbound or bound with errors
+    items = product.items.all()
+    # Get all upcoming bookings for these items
+    upcoming_bookings = (
+        AssignedItem.objects
+        .filter(inventory_item__in=items, booking__end_date__gte=timezone.now().date())
+        .select_related('booking', 'inventory_item')
+        .order_by('booking__start_date')
+    )
     return render(request, 'inventory/product_detail.html', {
         'product': product,
         'items': items,
-        'search_query': search_query,
+        'upcoming_bookings': upcoming_bookings,
     })
 
 def delete_product(request, pk):
@@ -117,15 +100,27 @@ def add_inventory_item(request, product_pk):
 def edit_product(request, pk):
     product = get_object_or_404(Product, pk=pk)
     if request.method == "POST":
-        form = ProductForm(request.POST, instance=product)
+        form = ProductForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
             form.save()
-            return redirect('inventory:product_detail', pk=product.pk)
+            return redirect('inventory:product_detail', product.pk)
     else:
         form = ProductForm(instance=product)
+
+    # Get all inventory items for this product
+    inventory_items = product.items.all()
+    # Get all upcoming bookings for these items
+    upcoming_bookings = (
+        AssignedItem.objects
+        .filter(inventory_item__in=inventory_items, booking__end_date__gte=timezone.now().date())
+        .select_related('booking', 'inventory_item')
+        .order_by('booking__start_date')
+    )
+
     return render(request, 'inventory/edit_product.html', {
         'form': form,
         'product': product,
+        'upcoming_bookings': upcoming_bookings,
     })
 
 def edit_inventory_item(request, pk):

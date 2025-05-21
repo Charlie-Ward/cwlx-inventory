@@ -1,10 +1,42 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Edit Product: {{ product.name }}</h1>
-<form method="post">
+<form method="post" enctype="multipart/form-data">
   {% csrf_token %}
   {{ form.as_p }}
   <button type="submit" class="btn btn-primary">Save Changes</button>
   <a href="{% url 'inventory:product_detail' product.pk %}" class="btn btn-secondary">Cancel</a>
 </form>
+
+<h3 class="mt-5">Upcoming Bookings for This Product</h3>
+<table class="table">
+  <thead>
+    <tr>
+      <th>Booking</th>
+      <th>Inventory Item</th>
+      <th>Start Date</th>
+      <th>End Date</th>
+      <th>Client</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for assigned in upcoming_bookings %}
+      <tr>
+        <td>
+          <a href="{% url 'bookings:manage_booking' assigned.booking.id %}">
+            #{{ assigned.booking.id }} - {{ assigned.booking.event_name }}
+          </a>
+        </td>
+        <td>{{ assigned.inventory_item.barcode }}</td>
+        <td>{{ assigned.booking.start_date }}</td>
+        <td>{{ assigned.booking.end_date }}</td>
+        <td>{{ assigned.booking.client }}</td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="5" class="text-muted">No upcoming bookings for this product.</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}
