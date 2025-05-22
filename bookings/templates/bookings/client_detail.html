@@ -1,5 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
+
+<a href="{% url 'bookings:manage_clients' %}" class="btn btn-secondary mb-3">&larr; Back to Client List</a>
+
 <h1>Client: {{ client.name }}</h1>
 <p><strong>Email:</strong> {{ client.email }}</p>
 <p><strong>Phone:</strong> {{ client.phone }}</p>

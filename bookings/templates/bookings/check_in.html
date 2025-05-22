@@ -4,8 +4,7 @@
 
 {% block content %}
 
-<a href="{% url 'bookings:list' %}" class="btn btn-secondary mb-3">&larr; Back to Bookings List</a>
-
+<a href="{% url 'bookings:manage_booking' booking.id %}" class="btn btn-secondary mb-3">&larr; Back to Booking Management</a>
 <h1 class="mb-4">Manage Booking #{{ booking.id }}</h1>
 
 <div class="card mb-4">
@@ -26,14 +25,11 @@
   </div>
 </div>
 
-    <a href="{% url 'bookings:check_in' booking.id %}" class="btn btn-success mb-2 w-100">Batch Check In Page</a>
-
 <form method="POST" class="mb-4">
   {% csrf_token %}
   <div class="input-group mb-3">
     <input type="text" name="barcode" class="form-control" placeholder="Scan or enter barcode..." autofocus>
     <select name="action" class="form-select">
-      <option value="check_out">Check Out</option>
       <option value="check_in">Check In</option>
     </select>
     <button type="submit" class="btn btn-primary">Submit</button>
@@ -42,7 +38,7 @@
 
 <h4>Assigned Items</h4>
 
-<h4 class="mt-5">Add Items</h4>
+<!-- <h4 class="mt-5">Add Items</h4>
 <form method="POST" class="mb-4">
   {% csrf_token %}
   <input type="hidden" name="action" value="add_items">
@@ -55,7 +51,7 @@
     </select>
   </div>
   <button type="submit" class="btn btn-outline-secondary">Add Selected Items</button>
-</form>
+</form> -->
 
 <form method="POST">
   {% csrf_token %}

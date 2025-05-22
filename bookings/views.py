@@ -89,7 +89,6 @@ def manage_booking(request, booking_id):
                 assigned_item.delete()
         elif action == "check_out":
             item_id = request.POST.get("item_id")
-            # If coming from the barcode form, item_id may be None, so check barcode
             barcode = request.POST.get("barcode")
             if not item_id and barcode:
                 item = InventoryItem.objects.filter(barcode=barcode).first()
@@ -108,10 +107,19 @@ def manage_booking(request, booking_id):
                     assigned.save()
         elif action == "check_in":
             item_id = request.POST.get("item_id")
-            assigned = AssignedItem.objects.filter(booking=booking, inventory_item_id=item_id).first()
-            if assigned and assigned.checked_out and not assigned.checked_in:
-                assigned.checked_in = True
-                assigned.save()
+            barcode = request.POST.get("barcode")
+            if not item_id and barcode:
+                item = InventoryItem.objects.filter(barcode=barcode).first()
+                if item:
+                    assigned = AssignedItem.objects.filter(booking=booking, inventory_item=item).first()
+                    if assigned and assigned.checked_out and not assigned.checked_in:
+                        assigned.checked_in = True
+                        assigned.save()
+            else:
+                assigned = AssignedItem.objects.filter(booking=booking, inventory_item_id=item_id).first()
+                if assigned and assigned.checked_out and not assigned.checked_in:
+                    assigned.checked_in = True
+                    assigned.save()
         return redirect('bookings:manage_booking', booking_id=booking.pk)
 
     # Only exclude items assigned to bookings that overlap in dates
@@ -234,3 +242,52 @@ def edit_booking(request, booking_id):
     else:
         form = BookingForm(instance=booking)
     return render(request, 'bookings/edit_booking.html', {'form': form, 'booking': booking})
+
+# --- MANAGE BOOKING ---
+def check_in(request, booking_id):
+    booking = get_object_or_404(Booking, id=booking_id)
+    assigned_items = AssignedItem.objects.filter(booking=booking)
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "remove_item":
+            item_id = request.POST.get("item_id")
+            assigned_item = AssignedItem.objects.filter(booking=booking, inventory_item_id=item_id).first()
+            if assigned_item:
+                assigned_item.delete()
+        elif action == "check_in":
+            item_id = request.POST.get("item_id")
+            barcode = request.POST.get("barcode")
+            if not item_id and barcode:
+                item = InventoryItem.objects.filter(barcode=barcode).first()
+                if item:
+                    assigned = AssignedItem.objects.filter(booking=booking, inventory_item=item).first()
+                    if assigned and assigned.checked_out and not assigned.checked_in:
+                        assigned.checked_in = True
+                        assigned.save()
+            else:
+                assigned = AssignedItem.objects.filter(booking=booking, inventory_item_id=item_id).first()
+                if assigned and assigned.checked_out and not assigned.checked_in:
+                    assigned.checked_in = True
+                    assigned.save()
+        return redirect('bookings:check_in', booking_id=booking.pk)
+
+    # Only exclude items assigned to bookings that overlap in dates
+    overlapping_bookings = Booking.objects.filter(
+        Q(start_date__lt=booking.end_date) & Q(end_date__gt=booking.start_date)
+    ).exclude(pk=booking.pk)
+    booked_item_ids = AssignedItem.objects.filter(
+        booking__in=overlapping_bookings
+    ).values_list('inventory_item_id', flat=True)
+    already_assigned_ids = assigned_items.values_list('inventory_item_id', flat=True)
+    available_items = InventoryItem.objects.filter(is_available=True).exclude(
+        id__in=booked_item_ids
+    ).exclude(
+        id__in=already_assigned_ids
+    )
+
+    return render(request, 'bookings/check_in.html', {
+        'booking': booking,
+        'assigned_items': assigned_items,
+        'available_items': available_items
+    })

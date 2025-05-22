@@ -61,6 +61,20 @@ def product_list(request):
 def product_detail(request, pk):
     product = get_object_or_404(Product, pk=pk)
     items = product.items.all()
+
+    # Handle POST for toggling availability or deleting item
+    if request.method == "POST":
+        item_id = request.POST.get("item_id")
+        if "toggle_available" in request.POST and item_id:
+            item = get_object_or_404(InventoryItem, pk=item_id)
+            item.is_available = not item.is_available
+            item.save()
+            return redirect('inventory:product_detail', pk=pk)
+        elif "delete_item" in request.POST and item_id:
+            item = get_object_or_404(InventoryItem, pk=item_id)
+            item.delete()
+            return redirect('inventory:product_detail', pk=pk)
+
     # Get all upcoming bookings for these items
     upcoming_bookings = (
         AssignedItem.objects
@@ -68,6 +82,7 @@ def product_detail(request, pk):
         .select_related('booking', 'inventory_item')
         .order_by('booking__start_date')
     )
+
     return render(request, 'inventory/product_detail.html', {
         'product': product,
         'items': items,
