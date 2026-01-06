@@ -1,46 +1,18 @@
-# macOS
-.DS_Store
+# Python
+__pycache__/
+*.pyc
 
-# Node.js
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+# Virtual env
+venv/
+.venv/
 
-# Logs
-logs
-*.log
-*.pid
-*.seed
-*.pid.lock
+# Django
+db.sqlite3
+staticfiles/
+media/
 
-# Environment variables
+# Env vars
 .env
-.env.*
 
-# Build output
-dist/
-build/
-out/
-coverage/
-
-# Editor directories and files
-.vscode/
-.idea/
-*.sublime-workspace
-*.sublime-project
-
-# OS generated files
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-# Misc
-*.swp
-*.bak
-*.tmp
-*.orig
-*.rej
-
-django.yml
+# OS
+.DS_Store
